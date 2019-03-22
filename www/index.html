@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta
+      name="viewport"
+      content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width"
+    />
+
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src * 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *"
+    />
+
+    <link rel="stylesheet" href="./css/jquery.mobile.icons-1.4.5.min.css" />
+
+    <link rel="stylesheet" href="./css/jquery.mobile-1.4.5.min.css" />
+    <style>
+      .error {
+        color: red;
+      }
+
+      .ui-footer {
+        font-size: 20px;
+        font-weight: bold;
+      }
+      .head {
+        font-size: 50px;
+        font-weight: inherit;
+      }
+    </style>
+    <script src="./js/jquery-2.1.1.js"></script>
+    <script src="./js/jquery.mobile-1.4.5.min.js"></script>
+    <script src="js/notify.min.js"></script>
+    <script>
+      var db = window.openDatabase(
+        "Database5",
+        "1.0",
+        "StorageApp Demo",
+        200000
+      );
+      db.transaction(function(tx) {
+        var sqlStatement =
+          "CREATE TABLE IF NOT EXISTS StorageAppOrders (Id INTEGER PRIMARY KEY AUTOINCREMENT,Dimension INTEGER,Price INTEGER,ReporterName TEXT,Storage TEXT,Notes TEXT,TypeId INTEGER,FeatureId INTEGER)";
+        tx.executeSql(
+          sqlStatement,
+          [],
+          function(tx, result) {
+            console.log("table StorageOrders success");
+          },
+          function(error) {
+            console.log("Error occurred while creating the table.");
+          }
+        );
+      });
+      db.transaction(function(tx) {
+        var sqlStatement =
+          "CREATE TABLE IF NOT EXISTS StorageAppTypes (Id INTEGER PRIMARY KEY AUTOINCREMENT, TypeName TEXT)";
+        tx.executeSql(
+          sqlStatement,
+          [],
+          function(tx, result) {
+            console.log("table StorageTypes success");
+          },
+          function(error) {
+            console.log("Error occurred while creating the table.");
+          }
+        );
+      });
+      db.transaction(function(tx) {
+        var sqlStatement =
+          "CREATE TABLE IF NOT EXISTS StorageAppFeatures (Id INTEGER PRIMARY KEY AUTOINCREMENT, FeatureName TEXT)";
+        tx.executeSql(
+          sqlStatement,
+          [],
+          function(tx, result) {
+            console.log("StorageFeatures is added succesfully");
+          },
+          function(error) {
+            console.log("Error occurred while creating the table.");
+          }
+        );
+      });
+      $(document).on("pagechange", function(event, data) {
+        if (data.toPage[0].id === "pagetwo") {
+          GetType2();
+          GetFeature2();
+          var dt = new Date();
+          $("#StorageDate").val(dt.toUTCString());
+          $("#Id").val("");
+          $("#ReporterName").val("");
+          $("#Price").val("");
+          $("#Notes").val("");
+          $("#Dimension").val("");
+          
+        }
+        if (data.toPage[0].id === "pagethree") {
+          $("#FeatureId2").val("");
+          $("#TypeId2").val("");
+          var id = data.options.item;
+          GetFeature2();
+          GetType2();
+          db.transaction(function(tx) {
+            
+            var sqlStatement = "select * from StorageAppOrders where Id=?";
+            tx.executeSql(
+              sqlStatement,
+              [id],
+              function(tx, result) {
+                console.log(result);
+                $("#Id2").val(result.rows.item(0).Id);
+                $("#ReporterName2").val(result.rows.item(0).ReporterName);
+                $("#Price2").val(result.rows.item(0).Price);
+                $("#Notes2").val(result.rows.item(0).Notes);
+                $("#StorageDate2").val(result.rows.item(0).Storage);
+                $("#TypeId2").val(result.rows.item(0).TypeId);
+                $("#Dimension2").val(result.rows.item(0).Dimension);
+                $("#FeatureId2").val(result.rows.item(0).FeatureId);
+                $('#TypeId2').selectmenu('refresh');
+                $('#FeatureId2').selectmenu('refresh');
+              },
+              function(error) {
+                console.log("Error occurred while creating the table.");
+              }
+            );
+          });
+          
+        }
+        if (data.toPage[0].id === "pagefour") {
+          var id = data.options.item;
+          db.transaction(function(tx) {
+            var sqlStatement = "select * from StorageAppOrders where Id=?";
+            tx.executeSql(
+              sqlStatement,
+              [id],
+              function(tx, result) {
+                console.log(result);
+                var TypeId = result.rows.item(0).TypeId;
+                var FeatureId = result.rows.item(0).FeatureId;
+                var Id = "Your Id:" + result.rows.item(0).Id;
+                var Price = "Your Price is:" + result.rows.item(0).Price;
+                var ReporterName =
+                  "The reporter of this record is: " +
+                  result.rows.item(0).ReporterName;
+                var Dimension =
+                  "The dimension you hire which is: " +
+                  result.rows.item(0).Dimension;
+                var Notes =
+                  "Your notes in your order: " + result.rows.item(0).Notes;
+                var Type =
+                  "Your Type Of Storage Id is: " + result.rows.item(0).TypeId;
+                var Feature =
+                  "Your Feature Of Storage Id is :" +
+                  result.rows.item(0).FeatureId;
+                var Date = "Your starting date: " + result.rows.item(0).Storage;
+
+                db.transaction(function(tx) {
+                  var sqlStatement = "select * from StorageAppTypes where Id=?";
+                  tx.executeSql(
+                    sqlStatement,
+                    [TypeId],
+                    function(tx, results) {
+                      var name = "Type is: " + results.rows.item(0).TypeName;
+                      $(".Type").html(name);
+                    },
+                    function(error) {
+                      console.log("Error occurred while creating the table.");
+                    }
+                  );
+                });
+                db.transaction(function(tx) {
+                  var sqlStatement =
+                    "select * from StorageAppFeatures where Id=?";
+                  tx.executeSql(
+                    sqlStatement,
+                    [FeatureId],
+                    function(tx, results) {
+                      var name = "Feature is: " + results.rows.item(0).FeatureName;
+                      $(".Feature").html(name);
+                    },
+                    function(error) {
+                      console.log("Error occurred while creating the table.");
+                    }
+                  );
+                });
+                $(".Id").html(Id);
+                $(".Price").html(Price);
+                $(".ReporterName").html(ReporterName);
+                $(".Dimension").html(Dimension);
+                $(".Notes").html(Notes);
+                // $(".Type").html(Type);
+                // $(".Feature").html(Feature);
+                $(".StorageDate").html(Date);
+              },
+              function(error) {
+                console.log("Error occurred while creating the table.");
+              }
+            );
+          });
+         
+        }
+      });
+      function onButtonPressed(id) {
+        $.mobile.pageContainer.pagecontainer("change", "#pagethree", {
+          item: id,
+          transition: "turn"
+        });
+        
+      }
+      function onButtonPressed3() {
+        $.mobile.pageContainer.pagecontainer("change", "#pageone", {
+          transition: "turn"
+        });
+        
+      }
+      function GetOrder() {
+        db.transaction(function(tx) {
+          
+          var sqlStatement = 'select b.Id,c.Id, a.Id,b.FeatureName,c.TypeName,a.ReporterName,a.Storage from StorageAppOrders as a,StorageAppFeatures as b,StorageAppTypes as c where a.TypeId = c.Id and a.FeatureId=b.Id';
+
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              console.log(results);
+              var html =
+                '<ul data-role="listview" data-filter="true" data-inset="true" >';
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                
+                
+              
+                html +=
+                  "<li data-filtertext=" +
+                  results.rows.item(i).ReporterName +
+                  "><a   href=''>";
+                html +=
+                  "<h2>" +
+                  results.rows.item(i).ReporterName +
+                  "</h2>";
+                html += "<h3>"+results.rows.item(i).TypeName+"</h3>";
+                html += "<h3>"+results.rows.item(i).FeatureName+"</h3>";
+
+                html += "<p>" + results.rows.item(i).Storage + "</p>";
+                
+                html +=
+                  "<h2  onclick='Delete(" +
+                  results.rows.item(i).Id +
+                  ");' class='ui-btn ui-shadow ui-corner-all ui-icon-delete ui-btn-icon-notext'>Click</h2>";
+
+                html += "</a>";
+
+                html +=
+                  '<a href="#purchase" onclick=onButtonPressed(' +
+                  results.rows.item(i).Id +
+                  ') data-rel="popup" data-position-to="window" data-transition="pop" class="ui-btn ui-shadow ui-corner-all ui-icon-edit ui-btn-icon-notext">Purchase album</a>';
+
+                html + "</li>";
+              }
+              html += "</ul>";
+              $(".dung45").html(html);
+              $(".dung45 ul").listview();
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+       
+      }
+      function clickmepls() {
+        alert("dasdasd");
+      }
+      function onButtonPressed2() {
+        $.mobile.pageContainer.pagecontainer("change", "#pagetwo", {
+          transition: "turn"
+        });
+        
+      }
+      function Delete(id) {
+        if (confirm("Do you really want to delete this record?")) {
+          db.transaction(function(tx) {
+            var sqlStatement = "DELETE FROM StorageAppOrders where id=?";
+            tx.executeSql(
+              sqlStatement,
+              [id],
+              function(tx, result) {
+                $.notify("Delete Successfully", {
+                  globalPosition: "left center",
+                  className: "danger",
+                  autoHideDelay: 2000
+                });
+                GetOrder();
+              },
+              function(error) {
+                console.log("Error occurred while creating the table.");
+              }
+            );
+          });
+        }
+      }
+      function GetType() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppTypes";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html = "";
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<option value=" +
+                  results.rows.item(i).Id +
+                  ">" +
+                  results.rows.item(i).TypeName +
+                  "</option>";
+              }
+              $("#TypeId").html(html);
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+        
+      }
+      function GetType2() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppTypes";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html = "";
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<option value=" +
+                  results.rows.item(i).Id +
+                  ">" +
+                  results.rows.item(i).TypeName +
+                  "</option>";
+              }
+              $("#TypeId2").html(html);
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+        
+      }
+      function GetFeature() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppFeatures";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html = "";
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<option value=" +
+                  results.rows.item(i).Id +
+                  ">" +
+                  results.rows.item(i).FeatureName +
+                  "</option>";
+              }
+              $("#FeatureId").html(html);
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+       
+      }
+      function onButtonPressed4(Id) {
+        $.mobile.pageContainer.pagecontainer("change", "#pagefour", {
+          item: Id,
+          transition: "turn"
+        });
+      }
+      function SubmitForm() {
+        var ReporterName = $("#ReporterName").val();
+        var Price = $("#Price").val();
+        var Notes = $("#Notes").val();
+        var StorageDate = $("#StorageDate").val();
+        var TypeId = $("#TypeId").val();
+        var FeatureId = $("#FeatureId").val();
+        var Dimension = $("#Dimension").val();
+        db.transaction(function(tx) {
+          var sqlStatement =
+            "INSERT INTO StorageAppOrders (Dimension, Price,FeatureId,TypeId,Storage,Notes,ReporterName) VALUES (?,?,?,?,?,?,?)";
+          tx.executeSql(
+            sqlStatement,
+            [
+              Dimension,
+              Price,
+              FeatureId,
+              TypeId,
+              StorageDate,
+              Notes,
+              ReporterName
+            ],
+            function(tx, result) {
+              $.notify("Create Successfully", {
+                globalPosition: "left center",
+                className: "success",
+                autoHideDelay: 2000
+              });
+              GetOrder();
+              $.mobile.changePage("#pageone", {
+                reverse: false,
+                transition: "slide"
+              });
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+        
+      }
+      function SubmitForm2() {
+        var Id = $("#Id2").val();
+        var ReporterName = $("#ReporterName2").val();
+        var Price = $("#Price2").val();
+        var Notes = $("#Notes2").val();
+        var StorageDate = $("#StorageDate2").val();
+        var TypeId = $("#TypeId2").val();
+        var FeatureId = $("#FeatureId2").val();
+        var Dimension = $("#Dimension2").val();
+        console.log('TypeId: '+TypeId+'-FeatureId: '+FeatureId);
+        db.transaction(function(tx) {
+          var sqlStatement =
+            "UPDATE StorageAppOrders SET Dimension=?, Price=?,Storage=?,Notes=?,TypeId=?,FeatureId=?,ReporterName=? WHERE Id=?";
+          tx.executeSql(
+            sqlStatement,
+            [
+              Dimension,
+              Price,
+              StorageDate,
+              Notes,
+              TypeId,
+              FeatureId,
+              ReporterName,
+              Id
+            ],
+            function(tx, result) {
+              //console.log(result);
+              $.mobile.changePage("#pageone", {
+                reverse: false,
+                transition: "slide"
+              });
+              $.notify("Update Successfully", {
+                globalPosition: "left center",
+                className: "success",
+                autoHideDelay: 2000
+              });
+              GetOrder();
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+        
+      }
+      function GetFeature2() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppFeatures";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html = "";
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<option value=" +
+                  results.rows.item(i).Id +
+                  ">" +
+                  results.rows.item(i).FeatureName +
+                  "</option>";
+              }
+              $("#FeatureId2").html(html);
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+        
+      }
+      function SubmitType() {
+        var name = $("#TypeName").val();
+        db.transaction(function(tx) {
+          var sqlStatement = "INSERT INTO StorageAppTypes (TypeName) VALUES (?)";
+          tx.executeSql(
+            sqlStatement,
+            [name],
+            function(tx, result) {
+              $.notify("Create Successfully", {
+                globalPosition: "left center",
+                className: "success",
+                autoHideDelay: 2000
+              });
+              getTypeList();
+              GetType();
+
+              parent.history.back();
+
+              
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+      }
+      function SubmitFeature() {
+        var name = $("#Feature").val();
+
+        db.transaction(function(tx) {
+          var sqlStatement = "INSERT INTO StorageAppFeatures (FeatureName) VALUES (?)";
+          tx.executeSql(
+            sqlStatement,
+            [name],
+            function(tx, result) {
+              $.notify("Create Successfully", {
+                globalPosition: "left center",
+                className: "success",
+                autoHideDelay: 2000
+              });
+              getFeatureList();
+              GetFeature();
+              parent.history.back();
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+      }
+      function onCreateType() {
+        $("#TypeName").val("");
+        $.mobile.pageContainer.pagecontainer("change", "#pageseven", {
+          transition: "turn"
+        });
+      }
+      function onCreateFeature() {
+        $("#Feature").val("");
+        $.mobile.pageContainer.pagecontainer("change", "#pageeight", {
+          transition: "turn"
+        });
+      }
+      function getTypeList() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppTypes";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html =
+                '<ul data-role="listview" data-split-icon="gear" data-split-theme="a"  data-filter="true" data-inset="true">';
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<li data-filtertext=" + results.rows.item(i).TypeName + "><a>";
+                html += "<h2>" + results.rows.item(i).TypeName + "</h2>";
+
+                html += "</a>";
+                html +=
+                  '<a href="#purchase" onclick=DeleteType(' +
+                  results.rows.item(i).Id +
+                  ') data-rel="popup" data-position-to="window" data-transition="pop">Purchase album</a>';
+                html + "</li>";
+              }
+              html += "</ul>";
+              $(".storageType").html(html);
+              $(".storageType ul").listview();
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+      }
+      function getFeatureList() {
+        db.transaction(function(tx) {
+          var sqlStatement = "select * from StorageAppFeatures";
+          tx.executeSql(
+            sqlStatement,
+            [],
+            function(tx, results) {
+              var html =
+                '<ul data-role="listview" data-split-icon="gear" data-split-theme="a"  data-filter="true" data-inset="true">';
+              var len = results.rows.length,
+                i;
+              for (i = 0; i < len; i++) {
+                html +=
+                  "<li data-filtertext=" + results.rows.item(i).FeatureName + "><a>";
+                html += "<h2>" + results.rows.item(i).FeatureName + "</h2>";
+
+                html += "</a>";
+                html +=
+                  '<a href="#purchase" onclick=DeleteFeature(' +
+                  results.rows.item(i).Id +
+                  ') data-rel="popup" data-position-to="window" data-transition="pop">Purchase album</a>';
+                html + "</li>";
+              }
+              html += "</ul>";
+              $(".storageFeature").html(html);
+              $(".storageFeature ul").listview();
+            },
+            function(error) {
+              console.log("Error occurred while creating the table.");
+            }
+          );
+        });
+      }
+      function DeleteType(id) {
+        if (confirm("Do you really want to delete this record?")) {
+          db.transaction(function(tx) {
+            var sqlStatement = "DELETE FROM StorageAppTypes where Id=?";
+            tx.executeSql(
+              sqlStatement,
+              [id],
+              function(tx, result) {
+                $.notify("Delete Successfully", {
+                  globalPosition: "left center",
+                  className: "danger",
+                  autoHideDelay: 2000
+                });
+                getTypeList();
+              },
+              function(error) {
+                console.log("Error occurred while creating the table.");
+              }
+            );
+          });
+        }
+      }
+      function DeleteFeature(id) {
+        if (confirm("Do you really want to delete this record?")) {
+          db.transaction(function(tx) {
+            var sqlStatement = "DELETE FROM StorageAppFeatures where Id=?";
+            tx.executeSql(
+              sqlStatement,
+              [id],
+              function(tx, result) {
+                $.notify("Delete Successfully", {
+                  globalPosition: "left center",
+                  className: "danger",
+                  autoHideDelay: 2000
+                });
+                getFeatureList();
+              },
+              function(error) {
+                console.log("Error occurred while creating the table.");
+              }
+            );
+          });
+        }
+      }
+      $(document).ready(function() {
+        var name = $("#ReporterName").val();
+        var price = $("#Price").val();
+        var notes = $("#Notes").val();
+
+        $("#ReporterName").keyup(function() {
+          var name = $("#ReporterName").val();
+          if (name == "") {
+            $("#ReporterNameError").html("Required Fielded");
+          } else {
+            $("#ReporterNameError").html("");
+          }
+        });
+        $("#Price").keyup(function() {
+          var name = $("#Price").val();
+          if (name == "") {
+            $("#PriceError").html("Required Fielded");
+          } else {
+            $("#PriceError").html("");
+          }
+        });
+
+        $("#Dimension").keyup(function() {
+          var name = $("#Dimension").val();
+          if (name == "") {
+            $("#DimensionError").html("Required Fielded");
+          } else {
+            $("#DimensionError").html("");
+          }
+        });
+        GetOrder();
+        GetType();
+        GetFeature();
+        getTypeList();
+        getFeatureList();
+      });
+    </script>
+  </head>
+
+  <body>
+    <div
+      data-role="page"
+      class="jqm-demos"
+      id="pageone"
+      data-title="Panel fixed positioning"
+      data-url="panel-fixed-page1"
+    >
+      <div data-role="header">
+        <a href="#nav-panel" data-icon="gear" data-iconpos="notext">Menu</a>
+        <h2 class="head">MyStorageApp</h2>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <div class="dung45"></div>
+      </div>
+      <!-- <div data-role="popup" id="mypopup"> -->
+
+      <!-- </div> -->
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>Quan Vi Hao</h4>
+      </div>
+      <div
+        data-role="panel"
+        data-position-fixed="true"
+        data-display="push"
+        data-theme="b"
+        id="nav-panel"
+      >
+        <ul data-role="listview">
+          <li>
+            <a
+              href="#pagefive"
+              class="ui-btn ui-shadow ui-corner-all popdetailbtn"
+              >List Of Type</a
+            >
+          </li>
+
+          <li>
+            <a
+              href="#pagesix"
+              class="ui-btn ui-shadow ui-corner-all popdetailbtn"
+              >List Of Feature</a
+            >
+          </li>
+          <li>
+            <a
+              onclick="onButtonPressed2()"
+              type="button"
+              class="ui-btn ui-shadow ui-corner-all popdetailbtn"
+              data-rel="popup"
+              >Create Hiring</a
+            >
+          </li>
+          <li></li>
+        </ul>
+      </div>
+      <!-- /panel -->
+
+      <!-- /panel -->
+      <!-- /footer -->
+    </div>
+    <!-- /page -->
+    <div data-role="page" id="pagetwo">
+      <div data-role="header">
+        <h1>MyStorage App</h1>
+        <a onclick="onButtonPressed3()" data-icon="back">Back</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <form id="formSubmit">
+          <input type="hidden" name="Id" id="Id" />
+          <label
+            for="ReporterName"
+            id="ReporterNameError"
+            class="error"
+          ></label>
+          <input
+            type="text"
+            name="ReporterName"
+            id="ReporterName"
+            placeholder="ReporterName"
+          />
+
+          <label for="Dimension" id="DimensionError" class="error"></label>
+          <input
+            type="number"
+            name="Dimension"
+            id="Dimension"
+            placeholder="Dimension"
+          />
+
+          <label for="Price" id="PriceError" class="error"></label>
+          <input type="number" name="Price" id="Price" placeholder="Price" />
+
+          <label for="Notes" id="NotesError" class="error"></label>
+          <input type="text" name="Notes" id="Notes" placeholder="Notes" />
+
+          <label for="StorageDate" class="error"></label>
+          <input
+            type="text"
+            name="StorageDate"
+            id="StorageDate"
+            placeholder="StorageDate"
+            readonly="true"
+          />
+
+          <label for="Type" class="error"></label>
+          <select id="TypeId" name="TypeId">
+            <option>Select Type</option>
+          </select>
+
+          <label for="Feature" class="error"></label>
+          <select id="FeatureId" name="FeatureId">
+            <option>Select Type</option>
+          </select>
+        </form>
+        <button onclick="SubmitForm()" class="btnsub">Submit</button>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>Quan Vi Hao</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pagethree">
+      <div data-role="header">
+        <h1>Update</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <form id="formSubmit2">
+          <input type="hidden" name="Id" id="Id2" />
+          <label
+            for="ReporterName"
+            id="ReporterNameError2"
+            class="error"
+          ></label>
+          <input
+            type="text"
+            name="ReporterName"
+            id="ReporterName2"
+            placeholder="ReporterName"
+          />
+
+          <label for="Dimension" id="DimensionError2" class="error"></label>
+          <input
+            type="number"
+            name="Dimension"
+            id="Dimension2"
+            placeholder="Dimension"
+          />
+
+          <label for="Price" id="PriceError2" class="error"></label>
+          <input type="number" name="Price" id="Price2" placeholder="Price" />
+
+          <label for="Notes" id="NotesError" class="error"></label>
+          <input type="text" name="Notes" id="Notes2" placeholder="Notes" />
+
+          <label for="StorageDate" class="error"></label>
+          <input
+            type="text"
+            name="StorageDate"
+            id="StorageDate2"
+            placeholder="StorageDate"
+            readonly="true"
+          />
+
+          <label for="Type" class="error"></label>
+          <select id="TypeId2" name="TypeId"> </select>
+
+          <label for="Feature" class="error"></label>
+          <select id="FeatureId2" name="FeatureId"> </select>
+        </form>
+        <button onclick="SubmitForm2()" class="btnsub">Submit</button>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>Quan Vi Hao</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pagefour">
+      <div data-role="header">
+        <h1>Detail</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <ul data-role="listview" data-inset="true">
+          <li class="Id"></li>
+          <li class="ReporterName"></li>
+          <li class="StorageDate"></li>
+          <li class="Price"></li>
+          <li class="Notes"></li>
+          <li class="Type"></li>
+          <li class="Feature"></li>
+          <li class="Dimension"></li>
+        </ul>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>Quan Vi Hao</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pagefive">
+      <div data-role="header">
+        <h1>StorageType</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+        <a onclick="onCreateType()">Create</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <div class="storageType">
+          <ul></ul>
+        </div>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>MyStorage</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pagesix">
+      <div data-role="header">
+        <h1>StorageFeature</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+        <a onclick="onCreateFeature()">Create</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <div class="storageFeature">
+          <ul></ul>
+        </div>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>MyStorage</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pageseven">
+      <div data-role="header">
+        <h1>StorageTypeCreate</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <form id="formSubmit4">
+          <input type="hidden" name="Id" id="Id" />
+          <label for="ReporterName" id="TypeNameError" class="error"></label>
+          <input
+            type="text"
+            name="ReporterName"
+            id="TypeName"
+            placeholder="Type Name"
+          />
+        </form>
+        <button onclick="SubmitType()" class="btnsub">Submit</button>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>MyStorage</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <div data-role="page" id="pageeight">
+      <div data-role="header">
+        <h1>StorageFeatureCreate</h1>
+        <a href="#" data-rel="back" data-icon="back">Back</a>
+      </div>
+      <!-- /header -->
+
+      <div role="main" class="ui-content">
+        <form id="formSubmit5">
+          <input type="hidden" name="Id" id="Id" />
+          <label for="ReporterName" id="TypeNameError" class="error"></label>
+          <input
+            type="text"
+            name="ReporterName"
+            id="Feature"
+            placeholder="Feature Name"
+          />
+        </form>
+        <button onclick="SubmitFeature()" class="btnsub">Submit</button>
+      </div>
+      <!-- /content -->
+
+      <div data-role="footer" data-position="fixed">
+        <h4>MyStorage</h4>
+      </div>
+      <!-- /footer -->
+    </div>
+    <!-- /page -->
+    <script type="text/javascript" src="cordova.js"></script>
+    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript">
+      app.initialize();
+    </script>
+  </body>
+</html>
